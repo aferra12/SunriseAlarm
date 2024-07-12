@@ -9,12 +9,12 @@ My solution to this problem was to create a device that would physically block t
 
 These are the steps I followed to build it:
 
-Building the TVs
+### Building the TVs
 1. I followed DIY Perks' wonderful YouTube video to prep the TVs
 2. I wired 4 LED strips in parallel on the backlight display for increased luminosity
 3. I made sure to leave enough wire exposed outside of the TV to power it via my circuit
 
-Building the Circuit
+### Building the Circuit
 1. I adapted Benjamen Lim's great guide and Arduino code to suit my needs
 2. After building the circuit, I adapted the code for my desired time zone and "sunrise" timing
 3. Since it runs off of an Adafruit real-time clock chip, I can upload the code once and have it repeatedly run daily with no maintenance
