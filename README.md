@@ -21,8 +21,7 @@ These are the steps I followed to build it:
 4. I hooked up the TV power wires to the original LED output of the circuit (the TV is essentially a big LED) and my circuit was complete
 
 Here is the V1 circuit and TV screens to be mounted (my Arduino code can be found here):
-
-![IMG_5618](https://github.com/user-attachments/assets/e14a97e3-38d0-4733-9ff1-7a01fbafdfb4)
+![IMG_5701](https://github.com/user-attachments/assets/f65349df-9175-4885-8229-08de1b4a034b)
 ![IMG_5619](https://github.com/user-attachments/assets/71f72883-22ee-4877-9104-e92b820e8a51)
 
 Here is a video of it working in action prior to mounting!
@@ -33,4 +32,7 @@ After a little drilling, elbow grease, and twine, the screens are mounted. Here 
 ![IMG_5620](https://github.com/user-attachments/assets/c9c6e287-9ab1-4292-8272-bed5e211350e)
 ![IMG_5621](https://github.com/user-attachments/assets/f74f87ee-b9df-4f2c-a6a1-f08585bb2892)
 
-I was blown away at how bright these screens were and how much they illuminated the room with believable daylight. This was easily the largest project I have ever worked on as it encompassed both software and hardware. Look mom, my electrical engineering degree actually paid off!
+I was blown away at how bright these screens were and how much they illuminated the room with believable daylight. And finally, here is a video of the linear version of the brightening working in action:
+https://github.com/user-attachments/assets/2397a4b2-03df-4c36-bcf8-f2d4e6fd3832
+
+This was easily the largest project I have ever worked on as it encompassed both software and hardware. Look mom, my electrical engineering degree actually paid off!
