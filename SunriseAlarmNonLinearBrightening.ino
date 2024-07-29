@@ -1,6 +1,7 @@
 #include <RTClib.h>
 #include <Wire.h>
 #include <EEPROM.h>
+#include <avr/wdt.h>
 
 #define LEDPIN 3
 #define ONBUTTON 2
@@ -15,11 +16,11 @@
 #define MAX_RUNTIME 10800000 // 3 hours in milliseconds
 
 #define INITIAL_SUNRISE_HOUR 4    // Set your desired initial sunrise hour here (24-hour format)
-#define INITIAL_SUNRISE_MINUTE 45 // Set your desired initial sunrise minute here
+#define INITIAL_SUNRISE_MINUTE 51 // Set your desired initial sunrise minute here
 
 RTC_DS1307 rtc;
 
-volatile bool is_power_on = true;  // State variable
+volatile bool should_reset = false;  // Flag to indicate if we should reset
 unsigned long last_toggle_time = 0;  // To debounce the button
 
 bool isSunriseGettingLater = true; // Set this to false when sunrise starts getting earlier
@@ -52,7 +53,7 @@ void setup() {
     // rtc.adjust(DateTime(__DATE__, __TIME__));
   }
 
-  attachInterrupt(digitalPinToInterrupt(ONBUTTON), toggleState, FALLING);
+  attachInterrupt(digitalPinToInterrupt(ONBUTTON), buttonPressed, FALLING);
 
   currentVersion = (INITIAL_SUNRISE_HOUR << 8) | INITIAL_SUNRISE_MINUTE;
   checkAndResetReferenceDate();
@@ -63,6 +64,10 @@ void setup() {
 }
 
 void loop() {
+  if (should_reset) {
+    resetAndRestart();
+  }
+
   if (Serial.available() > 0) {
     char input = Serial.read();
     if (input == 'c') {
@@ -70,34 +75,30 @@ void loop() {
     }
   }
 
-  if (is_power_on) {
-    DateTime now = rtc.now();
-    int alarmHour, alarmMinute;
-    getAdjustedAlarmTime(now, alarmHour, alarmMinute);
-    
-    Serial.print("Current time: ");
-    Serial.print(now.hour());
-    Serial.print(":");
-    Serial.print(now.minute());
-    Serial.print(" Alarm time: ");
-    Serial.print(alarmHour);
-    Serial.print(":");
-    Serial.println(alarmMinute);
+  DateTime now = rtc.now();
+  int alarmHour, alarmMinute;
+  getAdjustedAlarmTime(now, alarmHour, alarmMinute);
+  
+  Serial.print("Current time: ");
+  Serial.print(now.hour());
+  Serial.print(":");
+  Serial.print(now.minute());
+  Serial.print(" Alarm time: ");
+  Serial.print(alarmHour);
+  Serial.print(":");
+  Serial.println(alarmMinute);
 
-    if ((now.minute() == alarmMinute) && (now.hour() == alarmHour)) {
-      Serial.println("Sunrise started");
-      simulateSunrise();
-    } else {
-      delay(1000);
-    }
+  if ((now.minute() == alarmMinute) && (now.hour() == alarmHour)) {
+    Serial.println("Sunrise started");
+    simulateSunrise();
   } else {
-    analogWrite(LEDPIN, 0);
+    delay(1000);
   }
 }
 
 void simulateSunrise() {
   unsigned long startTime = millis();
-  while (millis() - startTime < MAX_RUNTIME && is_power_on) {
+  while (millis() - startTime < MAX_RUNTIME && !should_reset) {
     unsigned long elapsedTime = millis() - startTime;
     
     int brightness = calculateBrightness(min(elapsedTime, TOTAL_DURATION));
@@ -125,12 +126,36 @@ int calculateBrightness(unsigned long elapsedTime) {
   }
 }
 
-void toggleState() {
+void buttonPressed() {
   // Debounce
   if (millis() - last_toggle_time > 50) {
-    is_power_on = !is_power_on;
+    should_reset = true;
     last_toggle_time = millis();
   }
+}
+
+void resetAndRestart() {
+  // Save the current time as the new reference
+  DateTime now = rtc.now();
+  saveReferenceDateTime(now);
+  
+  // Increment the sunrise time by 1 minute
+  int newMinute = (referenceDateTime.minute + 1) % 60;
+  int newHour = referenceDateTime.hour;
+  if (newMinute == 0) {
+    newHour = (newHour + 1) % 24;
+  }
+  
+  referenceDateTime.hour = newHour;
+  referenceDateTime.minute = newMinute;
+  EEPROM.put(EEPROM_ADDRESS, referenceDateTime);
+  
+  Serial.println("Resetting and restarting...");
+  delay(1000);  // Give some time for the serial message to be sent
+  
+  // Reset the Arduino
+  wdt_enable(WDTO_15MS);
+  while(1) {}
 }
 
 void saveReferenceDateTime(const DateTime& dt) {
